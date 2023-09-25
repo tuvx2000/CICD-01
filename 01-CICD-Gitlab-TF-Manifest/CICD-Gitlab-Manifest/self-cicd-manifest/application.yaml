@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp-argo-application
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://gitlab.com/tuvolab/self-cicd-manifest.git
+    targetRevision: HEAD
+    path: app-yaml-file
+  destination: 
+    server: https://kubernetes.default.svc
+    namespace: myapp
+
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+
+    automated:
+      selfHeal: true
+      prune: true
+
+# kubectl create secret docker-registry regcred -n  --docker-server=https://index.docker.io/v1/ --docker-username=tuvx2000 --docker-password=xxx --docker-email=xxx@gmail.com 
+
+# kubectl create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username=tuvx2000 --docker-password=<your-pword> --docker-email=<your-email>
+# # Checking the credentials
+# kubectl get secret regcred --output=yaml
+# kubectl get secret regcred --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode

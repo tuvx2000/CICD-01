@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: myapp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: myapp
+        image: tuvx2000/cicd-gitlab:python-app-18823
+        ports:
+        - containerPort: 8080
+
+
+

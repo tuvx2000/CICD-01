@@ -1,0 +1,84 @@
+variables:
+  IMAGE_NAME: tuvx2000/cicd-gitlab
+  IMAGE_TAG: python-app-
+
+stages:
+  - test
+  - build
+  # - updatemaifest
+  # - deploy
+
+
+run_tests:
+  stage: test
+  image: python:3.9-slim-buster
+  before_script:
+    - apt-get update && apt-get install make
+  script:
+    - make test
+
+# sudo chmod 666 /var/run/docker.sock
+
+
+build_image:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS
+  script:
+    - randomnumber=$RANDOM 
+    - echo $IMAGE_NAME:$IMAGE_TAG$randomnumber
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG$randomnumber .
+    - docker push $IMAGE_NAME:$IMAGE_TAG$randomnumber
+ 
+    - cd ~
+    - colon=":"
+    # - NEWIMAGE=$IMAGE_NAME':'$IMAGE_TAG$randomnumber
+
+    # - echo ${NEWIMAGE]
+
+    # - git clone https://johndoe:mypass123@github.com/johndoe/my_project.git
+    # sed -i '/TEXT_TO_BE_REPLACED/c\This line is removed by the admin.' /tmp/foo
+
+    #/home/gitlab-runner/.ssh/id_rsa
+    - cd /home/gitlab-runner/
+    - rm -rf self-cicd-manifest
+    - git clone https://tuvolab:0989440622A@gitlab.com/tuvolab/self-cicd-manifest.git
+    - cd self-cicd-manifest/app-yaml-file/
+    # - sed -i "/image':' tuvx2000/c\        image':' $IMAGE_NAME:$IMAGE_TAG$randomnumber" deployment.yaml
+    - sed -i '/image'${colon}' tuvx2000/c\        image'${colon}' '${IMAGE_NAME}''${colon}''${IMAGE_TAG}''${randomnumber}'' deployment.yaml
+
+    - echo $IMAGE_NAME:$IMAGE_TAG$randomnumber
+    - cat deployment.yaml
+    - cd ../
+    - git add .
+    - git commit -m "Gitlab-Runer-Update-image':'' $IMAGE_NAME:$IMAGE_TAG$RANDOM"
+    - git push
+
+# sed -i '/image: tuvx2000/c\        image: tuvx2000/cicd-gitlab:NEW-as' self-cicd-manifest/app-yaml-file/deployment.yaml
+
+# build_image:
+#   stage: updatemaifest
+#   image: python:3.9-slim-buster
+#   before_script:
+#     - 
+
+
+
+# deploy: -> deploy CD which use when deploy on Servers, not EKS
+#   stage: deploy
+#   before_script:
+#     - chmod 400 $SSH_KEY
+#   script:
+#     - ssh -o StrictHostKeyChecking=no -i $SSH_KEY root@161.35.223.117 "
+#         docker login -u $REGISTRY_USER -p $REGISTRY_PASS &&
+#         docker ps -aq | xargs docker stop | xargs docker rm &&
+#         docker run -d -p 5000:5000 $IMAGE_NAME:$IMAGE_TAG"
+
+
+
+
